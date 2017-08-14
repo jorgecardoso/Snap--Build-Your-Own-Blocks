@@ -123,6 +123,7 @@ SpriteMorph.prototype.categories =
         'sound',
         'operators',
         'pen',
+        'mosaic',
         'variables',
         'lists',
         'other'
@@ -133,6 +134,7 @@ SpriteMorph.prototype.blockColor = {
     looks : new Color(143, 86, 227),
     sound : new Color(207, 74, 217),
     pen : new Color(0, 161, 120),
+    mosaic : new Color(255, 30, 30),
     control : new Color(230, 168, 34),
     sensing : new Color(4, 148, 220),
     operators : new Color(98, 194, 19),
@@ -163,6 +165,19 @@ SpriteMorph.prototype.bubbleMaxTextWidth = 130;
 
 SpriteMorph.prototype.initBlocks = function () {
     SpriteMorph.prototype.blocks = {
+        // Mosaics
+        tesselDown: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'tessel down'
+        },
+        tesselSize: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'tessel size %n %n'
+        },
 
         // Motion
         forward: {
@@ -1857,9 +1872,11 @@ SpriteMorph.prototype.blockTemplates = function (category) {
             blocks.push('-');
             blocks.push(block('reportSounds'));
         }
+    } else if (cat === 'mosaic') {
+        blocks.push(block('tesselDown'));
+        blocks.push(block('tesselSize'));
 
     } else if (cat === 'pen') {
-
         blocks.push(block('clear'));
         blocks.push('-');
         blocks.push(block('down'));
@@ -3852,6 +3869,9 @@ SpriteMorph.prototype.drawLine = function (start, dest) {
             this.world().broken.push(damaged);
         }
     }
+    if (this.tessel.isDown) {
+        this.drawTesselLine(start, dest);
+    }
 };
 
 SpriteMorph.prototype.floodFill = function () {
@@ -5392,6 +5412,8 @@ StageMorph.prototype.init = function (globals) {
     this.acceptsDrops = false;
     this.setColor(new Color(255, 255, 255));
     this.fps = this.frameRate;
+
+
 };
 
 // StageMorph scaling
