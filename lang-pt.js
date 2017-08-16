@@ -215,6 +215,8 @@ SnapTranslator.dict.pt = {
         'Listas',
     'Other':
         'Outros',
+    'Mosaic':
+        'Mosaico',
 
     // editor:
     'draggable':
@@ -286,6 +288,13 @@ SnapTranslator.dict.pt = {
 
         without breaking its functionality.
     */
+
+
+    // mosaico:
+    'tessel down':
+        'baixa o aplicador de tesselas',
+    'tessel size %n %n':
+        'tamanho da tessela %n %n',
 
     // movimento:
     'Stage selected:\nno motion primitives':

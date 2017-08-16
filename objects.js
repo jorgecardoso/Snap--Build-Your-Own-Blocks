@@ -184,6 +184,18 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'mosaic',
             spec: 'tessel down'
         },
+        tesselUp: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'tessel up'
+        },
+        tesselColor: {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'tessel color %s'
+        },
         tesselSize: {
             only: SpriteMorph,
             type: 'command',
@@ -1577,6 +1589,7 @@ SpriteMorph.prototype.setName = function (string) {
 // SpriteMorph rendering
 
 SpriteMorph.prototype.drawNew = function () {
+    console.log("drawNew");
     var myself = this,
         currentCenter,
         facing, // actual costume heading based on my rotation style
@@ -1686,6 +1699,7 @@ SpriteMorph.prototype.drawNew = function () {
         }
     }
     this.version = Date.now(); // for observer optimization
+    this.mosaicDrawNew();
 };
 
 SpriteMorph.prototype.endWarp = function () {
@@ -1977,6 +1991,8 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         }
     } else if (cat === 'mosaic') {
         blocks.push(block('tesselDown'));
+        blocks.push(block('tesselUp'));
+        blocks.push(block('tesselColor'));
         blocks.push(block('tesselSize'));
 
     } else if (cat === 'pen') {
@@ -3601,6 +3617,7 @@ SpriteMorph.prototype.getScale = function () {
 };
 
 SpriteMorph.prototype.setScale = function (percentage, noShadow) {
+
     // set my (absolute) scale in percent
     var x = this.xPosition(),
         y = this.yPosition(),
@@ -3652,6 +3669,7 @@ SpriteMorph.prototype.setScale = function (percentage, noShadow) {
 
 SpriteMorph.prototype.changeScale = function (delta) {
     this.setScale(this.getScale() + (+delta || 0));
+
 };
 
 // Spritemorph graphic effects
@@ -4117,6 +4135,7 @@ SpriteMorph.prototype.positionTalkBubble = function () {
 // dragging and dropping adjustments b/c of talk bubbles and parts
 
 SpriteMorph.prototype.prepareToBeGrabbed = function (hand) {
+    console.log("SpriteMorph.prototype.prepareToBeGrabbed");
     this.removeShadow();
     this.recordLayers();
     this.shadowAttribute('x position');
@@ -4126,6 +4145,7 @@ SpriteMorph.prototype.prepareToBeGrabbed = function (hand) {
         this.setCenter(hand.position());
     }
     this.addShadow();
+    this.mosaicPrepareToBeGrabbed(hand);
 };
 
 SpriteMorph.prototype.isCorrectingOutsideDrag = function () {
@@ -4186,9 +4206,7 @@ SpriteMorph.prototype.drawLine = function (start, dest) {
             this.world().broken.push(damaged);
         }
     }
-    if (this.tessel.isDown) {
-        this.drawTesselLine(start, dest);
-    }
+
 };
 
 SpriteMorph.prototype.floodFill = function () {
@@ -4262,10 +4280,15 @@ SpriteMorph.prototype.reportPenTrailsAsCostume = function () {
 // SpriteMorph motion - adjustments due to nesting
 
 SpriteMorph.prototype.moveBy = function (delta, justMe) {
+    console.log("moveBy", delta, justMe);
+    // for mosaic drawing the pen does have to be down
+    var startMosaic = !justMe && this.parent ?
+        this.rotationCenter() : null;
     // override the inherited default to make sure my parts follow
     // unless it's justMe (a correction)
     var start = this.isDown && !justMe && this.parent ?
             this.rotationCenter() : null;
+    console.log(start);
     SpriteMorph.uber.moveBy.call(this, delta);
     if (start) {
         this.drawLine(start, this.rotationCenter());
@@ -4287,6 +4310,11 @@ SpriteMorph.prototype.moveBy = function (delta, justMe) {
                 }
             }
         });
+    }
+
+    if (this.tessel.isDown && startMosaic) {
+        console.log("moveBy tessel is down");
+        this.drawTesselLine(startMosaic,  this.rotationCenter());
     }
 };
 
@@ -4310,6 +4338,7 @@ SpriteMorph.prototype.silentMoveBy = function (delta, justMe) {
             }
         });
     }
+
 };
 
 SpriteMorph.prototype.rootForGrab = function () {
@@ -4438,6 +4467,7 @@ SpriteMorph.prototype.xPosition = function () {
     var stage = this.parentThatIsA(StageMorph);
 
     if (!stage && this.parent.grabOrigin) { // I'm currently being dragged
+
         stage = this.parent.grabOrigin.origin;
     }
     if (stage) {
@@ -6219,6 +6249,7 @@ StageMorph.prototype.init = function (globals) {
 // StageMorph scaling
 
 StageMorph.prototype.setScale = function (number) {
+    console.log("setScale");
     var delta = number / this.scale,
         pos = this.position(),
         relativePos,

@@ -3048,6 +3048,7 @@ Morph.prototype.visibleBounds = function () {
 // Morph accessing - simple changes:
 
 Morph.prototype.moveBy = function (delta) {
+    //console.log("Morph.prototype.moveBy");
     this.fullChanged();
     this.silentMoveBy(delta);
     this.fullChanged();
@@ -3074,6 +3075,7 @@ Morph.prototype.setPosition = function (aPoint) {
 };
 
 Morph.prototype.silentSetPosition = function (aPoint) {
+    console.log("Morph.prototype.silentSetPosition");
     var delta = aPoint.subtract(this.topLeft());
     if ((delta.x !== 0) || (delta.y !== 0)) {
         this.silentMoveBy(delta);
@@ -3766,6 +3768,7 @@ Morph.prototype.rootForGrab = function () {
         return this;
     }
     return this.parent.rootForGrab();
+
 };
 
 Morph.prototype.isCorrectingOutsideDrag = function () {
@@ -3793,6 +3796,7 @@ Morph.prototype.pickUp = function (wrrld) {
         )
     );
     world.hand.grab(this);
+
 };
 
 Morph.prototype.isPickedUp = function () {
