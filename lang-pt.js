@@ -297,6 +297,8 @@ SnapTranslator.dict.pt = {
         'levanta o aplicador de tesselas',
     'set tessel color to %s':
         'altera a cor da tessela para %s',
+    'the current tessel color':
+        'a cor actual da tessela',
     'set tessel size to width: %n and height: %n':
         'altera o tamanho da tessela para\n largura: %n e altura: %n',
 
