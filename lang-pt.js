@@ -293,8 +293,12 @@ SnapTranslator.dict.pt = {
     // mosaico:
     'tessel down':
         'baixa o aplicador de tesselas',
-    'tessel size %n %n':
-        'tamanho da tessela %n %n',
+    'tessel up':
+        'levanta o aplicador de tesselas',
+    'set tessel color to %s':
+        'altera a cor da tessela para %s',
+    'set tessel size to width: %n and height: %n':
+        'altera o tamanho da tessela para\n largura: %n e altura: %n',
 
     // movimento:
     'Stage selected:\nno motion primitives':

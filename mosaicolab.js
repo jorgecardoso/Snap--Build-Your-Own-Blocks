@@ -1,3 +1,130 @@
+
+SpriteMorph.prototype.categories =
+    [
+        'motion',
+        'control',
+        'looks',
+        'sensing',
+        'sound',
+        'operators',
+        'pen',
+        'mosaic',
+        'variables',
+        'lists',
+        'other'
+    ];
+
+SpriteMorph.prototype.blockColor = {
+    motion : new Color(74, 108, 212),
+    looks : new Color(143, 86, 227),
+    sound : new Color(207, 74, 217),
+    pen : new Color(0, 161, 120),
+    mosaic : new Color(255, 30, 30),
+    control : new Color(230, 168, 34),
+    sensing : new Color(4, 148, 220),
+    operators : new Color(98, 194, 19),
+    variables : new Color(243, 118, 29),
+    lists : new Color(217, 77, 17),
+    other: new Color(150, 150, 150)
+};
+
+var currentInitBlocks = SpriteMorph.prototype.initBlocks;
+
+SpriteMorph.prototype.initBlocks = function () {
+    console.log("SpriteMorph.prototype.initBlocks");
+    currentInitBlocks.call(this);
+
+
+    // Mosaics
+    SpriteMorph.prototype.blocks.tesselDown = {
+        only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'tessel down'
+    };
+    SpriteMorph.prototype.blocks.tesselUp = {
+        only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'tessel up'
+    };
+    SpriteMorph.prototype.blocks.tesselColor = {
+        only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'set tessel color to %s'
+    };
+    SpriteMorph.prototype.blocks.getTesselColor = {
+        only: SpriteMorph,
+            type: 'reporter',
+            category: 'mosaic',
+            spec: 'get tessel color'
+    };
+    SpriteMorph.prototype.blocks.tesselSize= {
+        only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'set tessel size to width: %n and height: %n'
+    };
+}
+SpriteMorph.prototype.initBlocks();
+
+var currentBlockTemplates = SpriteMorph.prototype.blockTemplates;
+SpriteMorph.prototype.blockTemplates = function (category) {
+    console.log("SpriteMorph.prototype.blockTemplates", category);
+    var blocks = currentBlockTemplates.call(this, category);
+
+    function block(selector, isGhosted) {
+        if (StageMorph.prototype.hiddenPrimitives[selector]) {
+            return null;
+        }
+        var newBlock = SpriteMorph.prototype.blockForSelector(selector, true);
+        newBlock.isTemplate = true;
+        if (isGhosted) {newBlock.ghost(); }
+        return newBlock;
+    }
+
+    if (category === 'mosaic') {
+        blocks.push(block('tesselDown'));
+        blocks.push(block('tesselUp'));
+        blocks.push(block('tesselColor'));
+        blocks.push(block('getTesselColor'));
+        blocks.push(block('tesselSize'));
+    }
+    return blocks;
+}
+
+var currentFullCopy = SpriteMorph.prototype.fullCopy;
+SpriteMorph.prototype.fullCopy = function (forClone) {
+    var c = currentFullCopy.call(this, forClone);
+    c.tessel = JSON.parse(JSON.stringify(this.tessel));
+    return c;
+}
+
+
+var currentMoveBy = SpriteMorph.prototype.moveBy;
+SpriteMorph.prototype.moveBy = function (delta, justMe) {
+    console.log("SpriteMorph.prototype.moveBy", delta, justMe);
+
+    // for mosaic drawing the pen does not have to be down
+    var startMosaic = !justMe && this.parent ?
+        this.rotationCenter() : null;
+
+    currentMoveBy.call(this, delta, justMe);
+
+    if (this.tessel.isDown && startMosaic) {
+        console.log("moveBy tessel is down");
+        drawTesselLine.call(this, startMosaic, this.rotationCenter());
+    }
+};
+
+var currentPrepareToBeGrabbed = SpriteMorph.prototype.prepareToBeGrabbed;
+SpriteMorph.prototype.prepareToBeGrabbed = function (hand) {
+    console.log("SpriteMorph.prototype.prepareToBeGrabbed");
+    currentPrepareToBeGrabbed.call(this, hand);
+    this.tessel.lastTessel = null;
+};
+
 SpriteMorph.prototype.tessel = {
     isDown: false,
     color: "#ff00ff",
@@ -7,7 +134,6 @@ SpriteMorph.prototype.tessel = {
     lastStagePos: null,
     lastStageScale: null
 }
-
 
 
 SpriteMorph.prototype.tesselDown = function () {
@@ -21,8 +147,13 @@ SpriteMorph.prototype.tesselUp = function () {
     this.tessel.lastTessel = null;
 };
 SpriteMorph.prototype.tesselColor = function (color) {
-    console.log('tesselColor', color);
+    console.log(this.name + ' tesselColor', color);
     this.tessel.color = color;
+};
+
+SpriteMorph.prototype.getTesselColor = function () {
+    console.log(this.name + ' getTesselColor', this.tessel.color);
+    return this.tessel.color;
 };
 
 SpriteMorph.prototype.tesselSize = function (width, height) {
@@ -32,49 +163,49 @@ SpriteMorph.prototype.tesselSize = function (width, height) {
     this.tessel.height = Number(height);
 };
 
-SpriteMorph.prototype.drawTessel = function(at, angle) {
+var drawTessel = function (at, angle) {
     console.log("DrawTessel", at, angle);
     var ctx = this.parent.penTrails().getContext('2d');
     ctx.save();
     ctx.fillStyle = this.tessel.color;
-    ctx.strokeStyle= 'black';
+    ctx.strokeStyle = 'black';
     ctx.lineWidth = 0.1;
 
 
-    var rX = Math.random()*this.tessel.width*0.2;
-    var rY = Math.random()*this.tessel.height*0.2;
-    var p1 = new Point(-this.tessel.width/2+rX, -this.tessel.height/2+rY);
-    var p2 = new Point(this.tessel.width/2-rX, -this.tessel.height/2+rY);
-    var p3 = new Point(this.tessel.width/2-rX, this.tessel.height/2-rY);
-    var p4 = new Point( -this.tessel.width/2+rY, this.tessel.height/2-rY);
+    var rX = Math.random() * this.tessel.width * 0.2;
+    var rY = Math.random() * this.tessel.height * 0.2;
+    var p1 = new Point(-this.tessel.width / 2 + rX, -this.tessel.height / 2 + rY);
+    var p2 = new Point(this.tessel.width / 2 - rX, -this.tessel.height / 2 + rY);
+    var p3 = new Point(this.tessel.width / 2 - rX, this.tessel.height / 2 - rY);
+    var p4 = new Point(-this.tessel.width / 2 + rY, this.tessel.height / 2 - rY);
 
     ctx.translate(at.x, at.y);
     ctx.rotate(angle);
 
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
-    this.tesselLine(ctx, p1.x, p1.y, p2.x, p2.y);
-    this.tesselLine(ctx, p2.x, p2.y, p3.x, p3.y);
-    this.tesselLine(ctx, p3.x, p3.y, p4.x, p4.y);
-    this.tesselLine(ctx, p4.x, p4.y, p1.x, p1.y);
+    tesselLine(ctx, p1.x, p1.y, p2.x, p2.y);
+    tesselLine(ctx, p2.x, p2.y, p3.x, p3.y);
+    tesselLine(ctx, p3.x, p3.y, p4.x, p4.y);
+    tesselLine(ctx, p4.x, p4.y, p1.x, p1.y);
     ctx.closePath(); // draws last line of the triangle
     ctx.fill();
     ctx.stroke();
 
-   // ctx.strokeRect(-this.tessel.width/2, -this.tessel.height/2, this.tessel.width, this.tessel.height);
+    // ctx.strokeRect(-this.tessel.width/2, -this.tessel.height/2, this.tessel.width, this.tessel.height);
     ctx.restore();
 };
 
-SpriteMorph.prototype.tesselLine = function(ctx, x1, y1, x2, y2) {
-var n = 2;
-    for ( var i = 0; i < n; i++ ) {
-        var nX = x1+i*(x2-x1)/n+Math.random()*2-1;
-        var nY = y1+i*(y2-y1)/n+Math.random()*2-1;
+var tesselLine = function (ctx, x1, y1, x2, y2) {
+    var n = 2;
+    for (var i = 0; i < n; i++) {
+        var nX = x1 + i * (x2 - x1) / n + Math.random() * 2 - 1;
+        var nY = y1 + i * (y2 - y1) / n + Math.random() * 2 - 1;
         ctx.lineTo(nX, nY);
     }
 };
 
-SpriteMorph.prototype.drawTesselLine = function (start, dest) {
+var drawTesselLine = function (start, dest) {
     console.log("drawTesselLine", start, dest);
 
     var stagePos = this.parent.bounds.origin,
@@ -98,7 +229,7 @@ SpriteMorph.prototype.drawTesselLine = function (start, dest) {
     console.log("drawTesselLine", start, dest);
 
 
-    var   context = this.parent.penTrails().getContext('2d'),
+    var context = this.parent.penTrails().getContext('2d'),
         from = start.subtract(stagePos).divideBy(stageScale),
         to = dest.subtract(stagePos).divideBy(stageScale),
         damagedFrom = from.multiplyBy(stageScale).add(stagePos),
@@ -106,7 +237,6 @@ SpriteMorph.prototype.drawTesselLine = function (start, dest) {
         damaged = damagedFrom.rectangle(damagedTo).expandBy(
             Math.max(this.size * stageScale / 2, 1)
         ).intersect(this.parent.visibleBounds()).spread();
-
 
 
     if (this.tessel.isDown && this.tessel.width > 0) {
@@ -117,18 +247,18 @@ SpriteMorph.prototype.drawTesselLine = function (start, dest) {
         console.log(this.tessel.width, this.tessel.height);
 
 
-        var incX = (to.x-from.x)/dist;
-        var incY = (to.y-from.y)/dist;
-        for (var i = 0; i <= dist-this.tessel.width; i+=this.tessel.width ) {
-            var x = from.x+(incX*this.tessel.width/2)+i*incX;
-            var y = from.y+(incY*this.tessel.width/2)+i*incY;
+        var incX = (to.x - from.x) / dist;
+        var incY = (to.y - from.y) / dist;
+        for (var i = 0; i <= dist - this.tessel.width; i += this.tessel.width) {
+            var x = from.x + (incX * this.tessel.width / 2) + i * incX;
+            var y = from.y + (incY * this.tessel.width / 2) + i * incY;
             var at = new Point(x, y);
-            this.tessel.lastTessel = at.add(new Point(incX*this.tessel.width, incY*this.tessel.width)).subtract(new Point(incX*this.tessel.width/2, incY*this.tessel.width/2)).multiplyBy(stageScale).add(stagePos);
+            this.tessel.lastTessel = at.add(new Point(incX * this.tessel.width, incY * this.tessel.width)).subtract(new Point(incX * this.tessel.width / 2, incY * this.tessel.width / 2)).multiplyBy(stageScale).add(stagePos);
             this.tessel.lastStagePos = stagePos.copy();
             this.tessel.lastStageScale = stageScale;
             console.log("last tessel: ", this.tessel.lastTessel);
             console.log(at);
-            this.drawTessel(at, angle);
+            drawTessel.call(this, at, angle);
             //break;
         }
 
@@ -138,12 +268,3 @@ SpriteMorph.prototype.drawTesselLine = function (start, dest) {
     }
 };
 
-
-SpriteMorph.prototype.mosaicPrepareToBeGrabbed = function (hand) {
-    console.log("SpriteMorph.prototype.mosaicPrepareToBeGrabbed");
-  this.tessel.lastTessel = null;
-};
-
-SpriteMorph.prototype.mosaicDrawNew = function () {
-   // this.tessel.lastTessel = null;
-}

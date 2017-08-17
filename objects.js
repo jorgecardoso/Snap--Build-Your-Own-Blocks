@@ -135,7 +135,6 @@ SpriteMorph.prototype.categories =
         'sound',
         'operators',
         'pen',
-        'mosaic',
         'variables',
         'lists',
         'other'
@@ -146,7 +145,6 @@ SpriteMorph.prototype.blockColor = {
     looks : new Color(143, 86, 227),
     sound : new Color(207, 74, 217),
     pen : new Color(0, 161, 120),
-    mosaic : new Color(255, 30, 30),
     control : new Color(230, 168, 34),
     sensing : new Color(4, 148, 220),
     operators : new Color(98, 194, 19),
@@ -176,32 +174,9 @@ SpriteMorph.prototype.bubbleBorderColor = new Color(190, 190, 190);
 SpriteMorph.prototype.bubbleMaxTextWidth = 130;
 
 SpriteMorph.prototype.initBlocks = function () {
+
     SpriteMorph.prototype.blocks = {
-        // Mosaics
-        tesselDown: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'mosaic',
-            spec: 'tessel down'
-        },
-        tesselUp: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'mosaic',
-            spec: 'tessel up'
-        },
-        tesselColor: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'mosaic',
-            spec: 'tessel color %s'
-        },
-        tesselSize: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'mosaic',
-            spec: 'tessel size %n %n'
-        },
+
 
         // Motion
         forward: {
@@ -1480,9 +1455,13 @@ SpriteMorph.prototype.init = function (globals) {
     this.isDraggable = true;
     this.isDown = false;
     this.heading = 90;
+
+
     this.changed();
     this.drawNew();
     this.changed();
+
+
 };
 
 // SpriteMorph duplicating (fullCopy)
@@ -1589,7 +1568,6 @@ SpriteMorph.prototype.setName = function (string) {
 // SpriteMorph rendering
 
 SpriteMorph.prototype.drawNew = function () {
-    console.log("drawNew");
     var myself = this,
         currentCenter,
         facing, // actual costume heading based on my rotation style
@@ -1699,7 +1677,6 @@ SpriteMorph.prototype.drawNew = function () {
         }
     }
     this.version = Date.now(); // for observer optimization
-    this.mosaicDrawNew();
 };
 
 SpriteMorph.prototype.endWarp = function () {
@@ -1989,11 +1966,6 @@ SpriteMorph.prototype.blockTemplates = function (category) {
             blocks.push('-');
             blocks.push(block('reportSounds'));
         }
-    } else if (cat === 'mosaic') {
-        blocks.push(block('tesselDown'));
-        blocks.push(block('tesselUp'));
-        blocks.push(block('tesselColor'));
-        blocks.push(block('tesselSize'));
 
     } else if (cat === 'pen') {
         blocks.push(block('clear'));
@@ -4135,7 +4107,6 @@ SpriteMorph.prototype.positionTalkBubble = function () {
 // dragging and dropping adjustments b/c of talk bubbles and parts
 
 SpriteMorph.prototype.prepareToBeGrabbed = function (hand) {
-    console.log("SpriteMorph.prototype.prepareToBeGrabbed");
     this.removeShadow();
     this.recordLayers();
     this.shadowAttribute('x position');
@@ -4145,7 +4116,6 @@ SpriteMorph.prototype.prepareToBeGrabbed = function (hand) {
         this.setCenter(hand.position());
     }
     this.addShadow();
-    this.mosaicPrepareToBeGrabbed(hand);
 };
 
 SpriteMorph.prototype.isCorrectingOutsideDrag = function () {
@@ -4280,15 +4250,11 @@ SpriteMorph.prototype.reportPenTrailsAsCostume = function () {
 // SpriteMorph motion - adjustments due to nesting
 
 SpriteMorph.prototype.moveBy = function (delta, justMe) {
-    console.log("moveBy", delta, justMe);
-    // for mosaic drawing the pen does have to be down
-    var startMosaic = !justMe && this.parent ?
-        this.rotationCenter() : null;
     // override the inherited default to make sure my parts follow
     // unless it's justMe (a correction)
     var start = this.isDown && !justMe && this.parent ?
             this.rotationCenter() : null;
-    console.log(start);
+
     SpriteMorph.uber.moveBy.call(this, delta);
     if (start) {
         this.drawLine(start, this.rotationCenter());
@@ -4310,11 +4276,6 @@ SpriteMorph.prototype.moveBy = function (delta, justMe) {
                 }
             }
         });
-    }
-
-    if (this.tessel.isDown && startMosaic) {
-        console.log("moveBy tessel is down");
-        this.drawTesselLine(startMosaic,  this.rotationCenter());
     }
 };
 
