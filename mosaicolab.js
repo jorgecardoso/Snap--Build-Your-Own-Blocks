@@ -1,4 +1,5 @@
 (function () {
+
     SpriteMorph.prototype.categories =
         [
             'motion',
@@ -30,7 +31,6 @@
     };
 
     var currentInitBlocks = SpriteMorph.prototype.initBlocks;
-
     SpriteMorph.prototype.initBlocks = function () {
         console.log("SpriteMorph.prototype.initBlocks");
         currentInitBlocks.call(this);
@@ -68,6 +68,12 @@
             category: 'mosaic',
             spec: 'set tessel size to width: %n and height: %n'
         };
+        SpriteMorph.prototype.blocks.tesselFormat = {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: "set tessel format to %tesselFormat",
+        };
     }
     SpriteMorph.prototype.initBlocks();
 
@@ -96,6 +102,7 @@
             blocks.push(block('getTesselColor'));
             blocks.push('-');
             blocks.push(block('tesselSize'));
+            blocks.push(block('tesselFormat'));
         }
         return blocks;
     }
@@ -131,11 +138,53 @@
         this.tessel.lastTessel = null;
     };
 
+
+    var currentLabelPart = SyntaxElementMorph.prototype.labelPart;
+    SyntaxElementMorph.prototype.labelPart = function (spec) {
+        console.log("SyntaxElementMorph.prototype.labelPart", spec);
+        var currentPart = currentLabelPart.call(this, spec);
+
+        if (currentPart === undefined) {
+            var part, tokens;
+            if (spec[0] === '%' &&
+                spec.length > 1 &&
+                (this.selector !== 'reportGetVar' ||
+                    (spec === '%turtleOutline' && this.isObjInputFragment()))) {
+
+
+
+                // single-arg and specialized multi-arg slots:
+                switch (spec) {
+
+                    case '%tesselFormat':
+                        part = new InputSlotMorph(
+                            null,
+                            false,
+                            {
+                                'square': localize('square'),
+
+                            },
+                            true
+                        );
+                        part.setContents(localize('square'));
+                        break;
+
+                    default:
+                        nop();
+                }
+            }
+            return part;
+        } else {
+            return currentPart;
+        }
+    };
+
     SpriteMorph.prototype.tessel = {
         isDown: false,
         color: "#ff00ff",
         width: 20,
         height: 10,
+        format: 1,
         lastTessel: null,
         lastStagePos: null,
         lastStageScale: null
@@ -168,7 +217,11 @@
         this.tessel.width = Number(width);
         this.tessel.height = Number(height);
     };
+    SpriteMorph.prototype.tesselFormat = function (format) {
+        console.log('tesselFormat', format);
 
+        this.tessel.format = format;
+    };
     var drawTessel = function (at, angle) {
         console.log("DrawTessel", at, angle);
         var ctx = this.parent.penTrails().getContext('2d');

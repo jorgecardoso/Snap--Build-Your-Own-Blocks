@@ -302,6 +302,9 @@ SnapTranslator.dict.pt = {
     'set tessel size to width: %n and height: %n':
         'altera o tamanho da tessela para\n largura: %n e altura: %n',
 
+    'square':
+        'quadrado',
+
     // movimento:
     'Stage selected:\nno motion primitives':
         'Palco seleccionado:\nsem primitivas de movimento',
