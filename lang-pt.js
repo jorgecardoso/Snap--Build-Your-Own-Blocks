@@ -300,10 +300,14 @@ SnapTranslator.dict.pt = {
     'the current tessel color':
         'a cor actual da tessela',
     'set tessel size to width: %n and height: %n':
-        'altera o tamanho da tessela para\n largura: %n e altura: %n',
+        'altera o tamanho da tessela para largura: %n e altura: %n',
+    'set tessel format to %tesselFormat':
+        'muda o formato da tessela para %tesselFormat',
 
     'square':
         'quadrado',
+    'triangle':
+        'triângulo',
 
     // movimento:
     'Stage selected:\nno motion primitives':
