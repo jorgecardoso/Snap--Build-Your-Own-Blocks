@@ -151,6 +151,7 @@ SnapTranslator.dict.en = {
         '(sounds and images) or that you are using an older browser.' +
         'Please try using a recent version of Chrome, Firefox, or Safari.'
 };
+/*
 
 SnapTranslator.dict.de = {
     'language_name':
@@ -206,7 +207,7 @@ SnapTranslator.dict.ko = {
     'last_changed':
         '2015-01-21'
 };
-
+*/
 SnapTranslator.dict.pt = {
     'language_name':
         'Português',
@@ -217,7 +218,7 @@ SnapTranslator.dict.pt = {
     'last_changed':
         '2016-10-30'
 };
-
+/*
 SnapTranslator.dict.cs = {
     'language_name':
         'Česky',
@@ -569,3 +570,4 @@ SnapTranslator.dict.gl = {
     'last_changed':
         '2016-11-09'
 };
+*/
