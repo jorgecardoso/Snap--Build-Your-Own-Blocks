@@ -62,19 +62,41 @@
             category: 'mosaic',
             spec: 'the current tessel color'
         };
-        SpriteMorph.prototype.blocks.tesselSize = {
+        SpriteMorph.prototype.blocks.tesselWidth = {
             only: SpriteMorph,
             type: 'command',
             category: 'mosaic',
-            spec: 'set tessel size to width: %n and height: %n',
-            defaults: [20, 20]
+            spec: 'set tessel width to %n',
+            defaults: [20]
+        };
+        SpriteMorph.prototype.blocks.tesselHeight = {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'set tessel height to %n',
+            defaults: [20]
         };
         SpriteMorph.prototype.blocks.tesselFormat = {
             only: SpriteMorph,
             type: 'command',
             category: 'mosaic',
-            spec: "set tessel format to %tesselFormat",
+            spec: "set tessel to %tesselFormat shape",
+            defaults: ['square']
         };
+        SpriteMorph.prototype.blocks.tesselExactFormat = {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: "set tessel shape %tesselFormatApproximation",
+            defaults: ['exact']
+        };
+
+        /*SpriteMorph.prototype.blocks.reportFormat = {
+            only: SpriteMorph,
+            type: 'reporter',
+            category: 'mosaic',
+            spec: "choose %tesselFormat",
+        };*/
     }
     SpriteMorph.prototype.initBlocks();
 
@@ -102,8 +124,10 @@
             blocks.push(block('tesselColor'));
             blocks.push(block('getTesselColor'));
             blocks.push('-');
-            blocks.push(block('tesselSize'));
+            blocks.push(block('tesselWidth'));
+            blocks.push(block('tesselHeight'));
             blocks.push(block('tesselFormat'));
+            blocks.push(block('tesselExactFormat'));
         }
         return blocks;
     }
@@ -153,7 +177,6 @@
                     (spec === '%turtleOutline' && this.isObjInputFragment()))) {
 
 
-
                 // single-arg and specialized multi-arg slots:
                 switch (spec) {
 
@@ -163,11 +186,24 @@
                             false,
                             {
                                 'square': localize('square'),
-                                'triangle' : localize('triangle'),
-                                'trapezoid' : localize('trapezoid')
+                                'triangle': localize('triangle'),
+                                'trapezoid': localize('trapezoid')
 
                             },
-                            true
+                            false
+                        );
+                        part.setContents(localize('square'));
+                        break;
+                    case '%tesselFormatApproximation':
+                        part = new InputSlotMorph(
+                            null,
+                            false,
+                            {
+                                'exact': localize('exact'),
+                                'approximate': localize('approximate')
+
+                            },
+                            false
                         );
                         part.setContents(localize('square'));
                         break;
@@ -184,6 +220,7 @@
 
     SpriteMorph.prototype.tessel = {
         isDown: false,
+        drawExact: false,
         color: "#000000",
         width: 20,
         height: 20,
@@ -214,16 +251,20 @@
         return this.tessel.color;
     };
 
-    SpriteMorph.prototype.tesselSize = function (width, height) {
-        console.log('tesselSize', width, height);
+    SpriteMorph.prototype.tesselWidth = function (width) {
+        console.log('tesselWidth', width);
 
         this.tessel.width = Number(width);
+    };
+    SpriteMorph.prototype.tesselHeight = function (height) {
+        console.log('tesselHeight', height);
+
         this.tessel.height = Number(height);
     };
     SpriteMorph.prototype.tesselFormat = function (format) {
         console.log('tesselFormat', format);
 
-        switch(format) {
+        switch (format) {
             case localize('square') :
                 this.tessel.format = 'square';
                 break;
@@ -237,10 +278,26 @@
 
     };
 
+    SpriteMorph.prototype.tesselExactFormat = function (approximation) {
+        console.log('tesselExactFormat');
+
+        switch (approximation) {
+            case localize('exact') :
+                this.tessel.drawExact = true;
+                break;
+            case localize('approximate') :
+            default :
+                this.tessel.drawExact = false;
+        }
+
+    };
+
+
+
     function drawSquareTessel(ctx) {
         console.log("drawSquareTessel", ctx)
-        var rX = Math.random() * this.tessel.width * 0.1;
-        var rY = Math.random() * this.tessel.height * 0.1;
+        var rX = this.tessel.drawExact ? 0 : Math.random() * this.tessel.width * 0.1;
+        var rY = this.tessel.drawExact ? 0 : Math.random() * this.tessel.height * 0.1;
         var p1 = new Point(-this.tessel.width / 2 + rX, -this.tessel.height / 2 + rY);
         var p2 = new Point(this.tessel.width / 2 - rX, -this.tessel.height / 2 + rY);
         var p3 = new Point(this.tessel.width / 2 - rX, this.tessel.height / 2 - rY);
@@ -248,10 +305,10 @@
 
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
-        tesselEdge(ctx, p1.x, p1.y, p2.x, p2.y);
-        tesselEdge(ctx, p2.x, p2.y, p3.x, p3.y);
-        tesselEdge(ctx, p3.x, p3.y, p4.x, p4.y);
-        tesselEdge(ctx, p4.x, p4.y, p1.x, p1.y);
+        tesselEdge(ctx, p1.x, p1.y, p2.x, p2.y, this.tessel.drawExact);
+        tesselEdge(ctx, p2.x, p2.y, p3.x, p3.y, this.tessel.drawExact);
+        tesselEdge(ctx, p3.x, p3.y, p4.x, p4.y, this.tessel.drawExact);
+        tesselEdge(ctx, p4.x, p4.y, p1.x, p1.y, this.tessel.drawExact);
         ctx.closePath(); // draws last line of the triangle
         ctx.fill();
         //ctx.stroke();
@@ -259,8 +316,8 @@
 
     function drawTrapezoidTessel(ctx) {
         console.log("drawTrapezoidTessel", ctx);
-        var rX = Math.random() * this.tessel.width * 0.1;
-        var rY = Math.random() * this.tessel.height * 0.1;
+        var rX = this.tessel.drawExact ? 0 : Math.random() * this.tessel.width * 0.1;
+        var rY = this.tessel.drawExact ? 0 : Math.random() * this.tessel.height * 0.1;
         var p1 = new Point(-this.tessel.width / 4 + rX, -this.tessel.height / 2 + rY);
         var p2 = new Point(this.tessel.width / 4 - rX, -this.tessel.height / 2 + rY);
         var p3 = new Point(this.tessel.width / 2 - rX, this.tessel.height / 2 - rY);
@@ -268,10 +325,10 @@
 
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
-        tesselEdge(ctx, p1.x, p1.y, p2.x, p2.y);
-        tesselEdge(ctx, p2.x, p2.y, p3.x, p3.y);
-        tesselEdge(ctx, p3.x, p3.y, p4.x, p4.y);
-        tesselEdge(ctx, p4.x, p4.y, p1.x, p1.y);
+        tesselEdge(ctx, p1.x, p1.y, p2.x, p2.y, this.tessel.drawExact);
+        tesselEdge(ctx, p2.x, p2.y, p3.x, p3.y, this.tessel.drawExact);
+        tesselEdge(ctx, p3.x, p3.y, p4.x, p4.y, this.tessel.drawExact);
+        tesselEdge(ctx, p4.x, p4.y, p1.x, p1.y, this.tessel.drawExact);
         ctx.closePath(); // draws last line of the triangle
         ctx.fill();
         //ctx.stroke();
@@ -279,18 +336,18 @@
 
     function drawTriangleTessel(ctx) {
         console.log("drawTriangleTessel", ctx);
-        var rX = Math.random() * this.tessel.width * 0.1;
-        var rY = Math.random() * this.tessel.height * 0.1;
-        var p1 = new Point( rX, -this.tessel.height / 2 + rY);
+        var rX = this.tessel.drawExact ? 0 : Math.random() * this.tessel.width * 0.1;
+        var rY = this.tessel.drawExact ? 0 : Math.random() * this.tessel.height * 0.1;
+        var p1 = new Point(rX, -this.tessel.height / 2 + rY);
         var p2 = new Point(this.tessel.width / 2 - rX, this.tessel.height / 2 - rY);
         var p3 = new Point(-this.tessel.width / 2 + rX, this.tessel.height / 2 - rY);
 
 
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
-        tesselEdge(ctx, p1.x, p1.y, p2.x, p2.y);
-        tesselEdge(ctx, p2.x, p2.y, p3.x, p3.y);
-        tesselEdge(ctx, p3.x, p3.y, p1.x, p1.y);
+        tesselEdge(ctx, p1.x, p1.y, p2.x, p2.y, this.tessel.drawExact);
+        tesselEdge(ctx, p2.x, p2.y, p3.x, p3.y, this.tessel.drawExact);
+        tesselEdge(ctx, p3.x, p3.y, p1.x, p1.y, this.tessel.drawExact);
 
         ctx.closePath(); // draws last line of the triangle
         ctx.fill();
@@ -306,8 +363,10 @@
         ctx.lineWidth = 1;
         ctx.translate(at.x, at.y);
         ctx.rotate(angle);
+        //console.log(angle, this.heading, Math.PI*this.heading/360);
+        //ctx.rotate(Math.PI*this.heading/180);
 
-        switch(this.tessel.format) {
+        switch (this.tessel.format) {
             case 'square' :
                 drawSquareTessel.call(this, ctx);
                 break;
@@ -319,17 +378,24 @@
                 break;
         }
 
+        this.doWearNextCostume(); // send message instead?
 
         //ctx.strokeRect(-this.tessel.width/2, -this.tessel.height/2, this.tessel.width, this.tessel.height);
         ctx.restore();
     };
 
-    var tesselEdge = function (ctx, x1, y1, x2, y2) {
-        var n = 2;
-        for (var i = 0; i < n; i++) {
-            var nX = x1 + i * (x2 - x1) / n + Math.random() * 2 - 1;
-            var nY = y1 + i * (y2 - y1) / n + Math.random() * 2 - 1;
-            ctx.lineTo(nX, nY);
+    var tesselEdge = function (ctx, x1, y1, x2, y2, exact) {
+        if (exact) {
+            //ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+        } else {
+            var n = 2;
+            for (var i = 0; i < n; i++) {
+                var nX = x1 + i * (x2 - x1) / n + Math.random() * 2 - 1;
+                var nY = y1 + i * (y2 - y1) / n + Math.random() * 2 - 1;
+                ctx.lineTo(nX, nY);
+
+            }
         }
     };
 
