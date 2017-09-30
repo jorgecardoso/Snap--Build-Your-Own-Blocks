@@ -378,11 +378,13 @@
                 break;
         }
 
-        this.doWearNextCostume(); // send message instead?
+        //this.doWearNextCostume(); // send message instead?
+        //fireMirobotEvent.call(this, "teste");
 
         //ctx.strokeRect(-this.tessel.width/2, -this.tessel.height/2, this.tessel.width, this.tessel.height);
         ctx.restore();
     };
+
 
     var tesselEdge = function (ctx, x1, y1, x2, y2, exact) {
         if (exact) {
@@ -452,6 +454,7 @@
                 this.tessel.lastStageScale = stageScale;
                 console.log("last tessel: ", this.tessel.lastTessel);
                 console.log(at);
+                this.parent.threads.processes[0].doBroadcast(localize('tessel_layed_message'));
                 drawTessel.call(this, at, angle);
                 //break;
             }
