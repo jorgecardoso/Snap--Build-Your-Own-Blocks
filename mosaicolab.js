@@ -35,9 +35,14 @@
         console.log("SpriteMorph.prototype.initBlocks");
         currentInitBlocks.call(this);
 
-
+        SpriteMorph.prototype.blocks.drawTessel = {
+            only: SpriteMorph,
+            type: 'command',
+            category: 'mosaic',
+            spec: 'draw tessel'
+        };
         // Mosaics
-        SpriteMorph.prototype.blocks.tesselDown = {
+      /*  SpriteMorph.prototype.blocks.tesselDown = {
             only: SpriteMorph,
             type: 'command',
             category: 'mosaic',
@@ -48,7 +53,7 @@
             type: 'command',
             category: 'mosaic',
             spec: 'tessel up'
-        };
+        };*/
         SpriteMorph.prototype.blocks.tesselColor = {
             only: SpriteMorph,
             type: 'command',
@@ -118,8 +123,9 @@
         }
 
         if (category === 'mosaic') {
-            blocks.push(block('tesselDown'));
-            blocks.push(block('tesselUp'));
+            blocks.push(block('drawTessel'));
+           // blocks.push(block('tesselDown'));
+            //blocks.push(block('tesselUp'));
             blocks.push('-');
             blocks.push(block('tesselColor'));
             blocks.push(block('getTesselColor'));
@@ -141,7 +147,7 @@
 
 
     var currentMoveBy = SpriteMorph.prototype.moveBy;
-    SpriteMorph.prototype.moveBy = function (delta, justMe) {
+   /* SpriteMorph.prototype.moveBy = function (delta, justMe) {
         console.log("SpriteMorph.prototype.moveBy", delta, justMe);
 
         // for mosaic drawing the pen does not have to be down
@@ -155,7 +161,7 @@
             drawTesselLine.call(this, startMosaic, this.rotationCenter());
         }
     };
-
+*/
     var currentPrepareToBeGrabbed = SpriteMorph.prototype.prepareToBeGrabbed;
     SpriteMorph.prototype.prepareToBeGrabbed = function (hand) {
         console.log("SpriteMorph.prototype.prepareToBeGrabbed");
@@ -230,7 +236,17 @@
         lastStageScale: null
     }
 
-
+    SpriteMorph.prototype.drawTessel = function () {
+        console.log('drawTessel');
+        var startMosaic = this.rotationCenter();
+        console.log("position", startMosaic);
+        //
+        console.log("scale:", this.parent.scale);
+       // console.log("position adjusted: ", startMosaic.subtract(this.parent.bounds.origin) );
+       drawTessel.call(this, startMosaic.subtract(this.parent.bounds.origin).divideBy(this.parent.scale), (Math.PI/180)*(this.heading-90));
+        this.forward(this.tessel.width);
+    };
+/*
     SpriteMorph.prototype.tesselDown = function () {
         console.log('tesselDown');
         this.tessel.isDown = true;
@@ -241,6 +257,7 @@
         this.tessel.isDown = false;
         this.tessel.lastTessel = null;
     };
+    */
     SpriteMorph.prototype.tesselColor = function (color) {
         console.log(this.name + ' tesselColor', color);
         this.tessel.color = color;
@@ -351,7 +368,7 @@
 
         ctx.closePath(); // draws last line of the triangle
         ctx.fill();
-        ctx.stroke();
+       // ctx.stroke();
     }
 
     var drawTessel = function (at, angle) {
